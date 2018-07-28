@@ -36,7 +36,7 @@ pred <- predict(fit, newdata = newDat)
 summary(pred)[4]*visitors$overall_max[1]
 
 #################
-setDay <- "Tuesday"
+setDay <- "Monday"
 x <- numeric(length = 18-8)
 for (i in (8:18)){
   newDat <- data.frame(hour=as.character(i),day=setDay)
@@ -45,3 +45,42 @@ for (i in (8:18)){
 }
 plot(x,xlim = c(8,18),ylim = c(0,150),main=paste("Visits of Infozentrun on", setDay),xlab = "Time",ylab = "Visitors")
 lines(x)
+
+######## Compare ######## 
+days <- c("Monday","Tuesday","Wednesday","Thursday","Friday","Saturday")
+par(mfrow=c(1,length(days)))
+
+interaction_time <- Sys.time()
+fit <- glm(overall/overall_max~hour*day,family=binomial,data = visitors)
+interaction_time <- Sys.time() - interaction_time
+no_interaction_time <- Sys.time()
+fit_no <- glm(overall/overall_max~hour+day,family=binomial,data = visitors)
+no_interaction_time <- Sys.time() - no_interaction_time
+
+for (day in days) {
+  
+  setDay <- day
+
+  x <- numeric(length = 18-8)
+  for (i in (8:18)){
+    newDat <- data.frame(hour=as.character(i),day=setDay)
+    pred <- predict(fit, newdata = newDat)
+    x[i] <- summary(pred)[4]*visitors$overall_max[1]
+  }
+  plot(x,xlim = c(8,18),ylim = c(0,150),main=paste("Visits of Infozentrun on", setDay),xlab = "Time",ylab = "Visitors")
+  lines(x)
+  
+  ################# NO INTERACTION
+  
+  x <- numeric(length = 18-8)
+  for (i in (8:18)){
+    newDat <- data.frame(hour=as.character(i),day=setDay)
+    pred <- predict(fit_no, newdata = newDat)
+    x[i] <- summary(pred)[4]*visitors$overall_max[1]
+  }
+  points(x,col="red")
+  lines(x,col="red")
+  
+}
+
+print(paste("Interaction: ", interaction_time, " No Interaction: ", no_interaction_time, "Diff: ", interaction_time-no_interaction_time))
